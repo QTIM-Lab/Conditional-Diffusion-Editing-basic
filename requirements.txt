@@ -1,0 +1,7 @@
+
+torch>=1.10
+torchvision
+diffusers
+tqdm
+pandas
+Pillow
