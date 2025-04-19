@@ -1,17 +1,16 @@
-
 # training/train.py
 import torch
-import torchvision
+import argparse
 from torch.utils.data import DataLoader
 from diffusers import UNet2DConditionModel, AutoencoderKL
 from models.condition_encoder import ConditionEncoder
 from datasets.image_condition_dataset import ImageConditionDataset
 from utils.scheduler import cosine_with_warmup
-from utils.diffusion_utils import sample_iadb, generate_evaluate
+from utils.diffusion_utils import generate_evaluate
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 from tqdm import tqdm
-import os
+import importlib
 
 def train_diffusion_model(train_loader, model, vae, encoder, device, epochs=50, nb_steps=128):
     optimizer = AdamW(list(model.parameters()) + list(encoder.parameters()), lr=1e-4)
@@ -48,15 +47,21 @@ def train_diffusion_model(train_loader, model, vae, encoder, device, epochs=50, 
         generate_evaluate(model, vae, encoder, device, epoch)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", type=str, required=True, help="Python module path to your train dataset")
+    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--epochs", type=int, default=50)
+    args = parser.parse_args()
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    dummy_images = torch.randn(64, 1, 64, 64)
-    dummy_conditions = torch.randint(0, 2, (64,)).float()
-    dataset = ImageConditionDataset(dummy_images, dummy_conditions)
-    train_loader = DataLoader(dataset, batch_size=16, shuffle=True)
+    # Dynamically import dataset
+    dataset_module = importlib.import_module(args.dataset)
+    train_dataset = dataset_module.get_dataset()
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 
     model = UNet2DConditionModel.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="unet").to(device)
     vae = AutoencoderKL.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="vae").to(device)
     encoder = ConditionEncoder(embedding_dim=768).to(device)
 
-    train_diffusion_model(train_loader, model, vae, encoder, device)
+    train_diffusion_model(train_loader, model, vae, encoder, device, epochs=args.epochs)
