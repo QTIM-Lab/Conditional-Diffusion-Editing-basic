@@ -1,5 +1,5 @@
 
-# 🌀 Conditional Diffusion Toolkit
+# 🌀 Conditional Diffusion Training & Editing
 
 Train and edit images using label-conditioned diffusion models, with support for **custom datasets** like Chest X-rays, fundus images, or any medical or visual data.
 
