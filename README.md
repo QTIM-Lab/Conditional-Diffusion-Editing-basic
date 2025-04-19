@@ -53,7 +53,7 @@ def get_dataset():
     from PIL import Image
     from torchvision import transforms
     transform = transforms.Compose([
-        transforms.Resize((64, 64)),
+        transforms.Resize((224, 224)),#
         transforms.ToTensor(),
     ])
 
