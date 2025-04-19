@@ -60,7 +60,7 @@ def get_dataset():
     df = pd.read_csv("labels.csv")
     imgs, labs = [], []
     for _, row in df.iterrows():
-        img = Image.open(f"images/{row['filename']}").convert("L")
+        img = Image.open(f"images/{row['filename']}").convert("L") # or rgb 
         imgs.append(transform(img))
         labs.append(float(row['label']))
     return ImageConditionDataset(torch.stack(imgs), torch.tensor(labs))
